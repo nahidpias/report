@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>আজকের পড়াশোনার প্রতিবেদন</title>
+
+  <!-- Stylish Bangla Font (SolaimanLipi alternative via Akshar Unicode or Baloo Da 2) -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Baloo Da 2', cursive;
+      background: #f3f6fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .container {
+      max-width: 650px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .topic-group {
+      margin-bottom: 15px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-family: 'Baloo Da 2', cursive;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #report-section {
+      display: none;
+      background: #fff;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table th, table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    table th {
+      background-color: #f0f0f0;
+    }
+
+    #preview-img {
+      display: none;
+      margin: 20px auto;
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      border: 1px solid #999;
+      object-fit: contain;
+    }
+
+    .share-buttons {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .share-buttons button {
+      background: #28a745;
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 6px;
+    }
+    a.download-link {
+      display: block;
+      margin-top: 10px;
+      color: #007bff;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .credit {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      input, button {
+        font-size: 14px;
+      }
+      table th, table td {
+        font-size: 14px;
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📘 আজকের পড়াশোনার প্রতিবেদন</h1>
+
+  <div class="container">
+    <div id="topic-container">
+      <div class="topic-group">
+        <input type="text" placeholder="পড়ার বিষয়" class="topic" />
+        <input type="number" placeholder="সময় (ঘন্টা)" class="hour" />
+      </div>
+    </div>
+    <button onclick="addTopic()">➕ আরও বিষয় যোগ করুন</button>
+    <button onclick="generateReport()">📄 প্রতিবেদন তৈরি করুন</button>
+
+    <div id="report-section">
+      <h2 id="report-title">আজকের পড়াশোনার প্রতিবেদন - </h2>
+      <table id="report-table">
+        <thead>
+          <tr>
+            <th>ক্রমিক</th>
+            <th>বিষয়</th>
+            <th>সময় (ঘণ্টা)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <img id="preview-img" src="" alt="Generated Report Image"/>
+
+    <div class="share-buttons" id="share-buttons" style="display:none;">
+      <button onclick="shareImage()">📤 JPG শেয়ার করুন</button>
+      <a id="download-link" class="download-link" download="Study_Report.jpg">⬇️ JPG ডাউনলোড করুন</a>
+    </div>
+
+    <div class="credit">📌 Designed & Developed by <strong>Nahid</strong></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    function addTopic() {
+      const container = document.getElementById('topic-container');
+      const group = document.createElement('div');
+      group.className = 'topic-group';
+      group.innerHTML = `
+        <input type="text" placeholder="পড়ার বিষয়" class="topic">
+        <input type="number" placeholder="সময় (ঘন্টা)" class="hour">
+      `;
+      container.appendChild(group);
+    }
+
+    async function generateReport() {
+      const topics = document.querySelectorAll('.topic');
+      const hours = document.querySelectorAll('.hour');
+      const tbody = document.querySelector('#report-table tbody');
+      tbody.innerHTML = ''; // Clear previous data
+
+      const today = new Date().toLocaleDateString('bn-BD', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      document.getElementById('report-title').innerText = `আজকের পড়াশোনার প্রতিবেদন - ${today}`;
+      document.getElementById('report-section').style.display = 'block';
+
+      let serial = 1;
+      for (let i = 0; i < topics.length; i++) {
+        const topic = topics[i].value.trim();
+        const hour = hours[i].value.trim();
+        if (topic && hour) {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${serial++}</td><td>${topic}</td><td>${hour}</td>`;
+          tbody.appendChild(row);
+        }
+      }
+
+      // Remove previous image
+      document.getElementById("preview-img").style.display = "none";
+      document.getElementById("download-link").style.display = "none";
+      document.getElementById("share-buttons").style.display = "none";
+
+      setTimeout(() => {
+        html2canvas(document.getElementById("report-section")).then(canvas => {
+          const imgData = canvas.toDataURL("image/jpeg");
+          const img = document.getElementById("preview-img");
+          img.src = imgData;
+          img.style.display = "block";
+
+          document.getElementById("download-link").href = imgData;
+          document.getElementById("download-link").style.display = "block";
+          document.getElementById("share-buttons").style.display = "block";
+        });
+      }, 500);
+    }
+
+    async function shareImage() {
+      const img = document.getElementById('preview-img');
+      const response = await fetch(img.src);
+      const blob = await response.blob();
+      const file = new File([blob], 'Study_Report.jpg', { type: blob.type });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'আজকের পড়াশোনার প্রতিবেদন',
+          text: 'আমার আজকের পড়ার হিসাব দেখুন!'
+        });
+      } else {
+        alert("দুঃখিত! আপনার ব্রাউজার শেয়ার সাপোর্ট করে না। JPG টি ডাউনলোড করুন।");
+      }
+    }
+  </script>
+</body>
+</html>
